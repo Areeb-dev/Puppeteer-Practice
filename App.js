@@ -1,5 +1,10 @@
 const puppeteer = require("puppeteer");
-let arrayOfObject=[]
+let arr = [];
+let urls = [
+  "https://sam.gov/opp/3e6df8a240c949f8a6257cee851822c3/view",
+  "https://sam.gov/opp/3d28fb00e4cb4ae89adc8d00138ef830/view",
+  "https://sam.gov/opp/2769922c5b194e3da0acf8c81feb6b8a/view",
+];
 async function login() {
   try {
     const URL =
@@ -11,70 +16,81 @@ async function login() {
     const page = await browser.newPage();
 
     await page.goto(URL);
-    await page.click(".close-btn", { clickcount: 1 });
 
     const secondPage = await browser.newPage();
-    await secondPage.goto(
-      "https://sam.gov/opp/3e6df8a240c949f8a6257cee851822c3/view"
-    );
-    await secondPage.click(".close-btn", { clickcount: 1 });
 
-    try {
-      const head = await secondPage.$eval(
-        "#main-container > ng-component > page > div > div > div.page-content.row > div.nine.wide.column > div.usa-width-three-fourths.br-double-after.ng-star-inserted > h1",
-        (el) => el.textContent
-      );
-      const id = await secondPage.$eval(
-        "div > .description",
-        (el) => el.textContent
-      );
-      const originalDate = await secondPage.$eval(
-        "#general-original-response-date",
-        (el) => el.textContent
-      );
-      const subCommand = await secondPage.$eval(
-        "#header-hierarchy-level > div > div:nth-child(6)",
-        (el) => el.textContent
-      );
-      const description = await secondPage.$eval(
-        "#description > div.ng-star-inserted",
-        (el) => el.textContent
-      );
-      const contractOpportunity = await secondPage.$eval(
-        "#general-type",
-        (el) => el.textContent
-      );
-      const department = await secondPage.$eval(
-        "#header-hierarchy-level > div > div:nth-child(2)",
-        (el) => el.textContent
-      );
-      const office = await secondPage.$eval(
-        "#header-hierarchy-level > div > div:nth-child(12)",
-        (el) => el.textContent
-      );
-      const NAICSCode = await secondPage.$eval(
-        "#classification-naics-code > ul > li",
-        (el) => el.textContent
-      );
-      const subTire = await secondPage.$eval(
-        "#header-hierarchy-level > div > div:nth-child(4)",
-        (el) => el.textContent
-      );
-      arrayOfObject.push({
-        heading: head,
-        id: id,
-        originalDate: originalDate,
-        subTire: subTire,
-        department: department,
-        contractOpportunity: contractOpportunity,
-        office: office,
-        subCommand: subCommand,
-        NAICSCode: NAICSCode,
-        description: description,
+    for (let i = 0; i < urls.length; i++) {
+      const url = urls[i];
+      await secondPage.goto(`${url}`, {
+        waitUntil: ["networkidle2", "domcontentloaded"],
       });
-      console.log(arrayOfObject);
-    } catch (error) {
-      console.log("ERROR", error);
+
+      try {
+        const main = await secondPage.evaluate(() => {
+          let closebtn = document.querySelector(".close-btn");
+          if (closebtn) {
+            closebtn.click();
+          }
+          let header =
+            document.querySelector(".sup.header")?.nextSibling?.textContent;
+          let id = document.querySelector("div > .description")?.textContent;
+          let originalDate = document.querySelector(
+            "#general-original-response-date"
+          )?.textContent;
+          let subCommand = document.querySelector(
+            "#header-hierarchy-level > div > div:nth-child(6)"
+          )?.textContent;
+          let description = document.querySelector(
+            "#description > div.ng-star-inserted"
+          )?.textContent;
+          let contractOpportunity =
+            document.querySelector("#general-type")?.textContent;
+          let department = document.querySelector(
+            "#header-hierarchy-level > div > div:nth-child(2)"
+          )?.textContent;
+          let NAICSCode = document.querySelector(
+            "#classification-naics-code > ul > li"
+          )?.textContent;
+          let subTire = document.querySelector(
+            "#header-hierarchy-level > div > div:nth-child(4)"
+          )?.textContent;
+          let upDatedDate = document.querySelector(
+            "#general-response-date"
+          )?.textContent;
+          let updatedPublish = document.querySelector(
+            "#general-published-date"
+          )?.textContent;
+          let upDatedDateOffer = document.querySelector(
+            "#general-response-date"
+          )?.textContent;
+          let originalDateOffer = document.querySelector(
+            "#general-original-response-date"
+          )?.textContent;
+          let productCode = document.querySelector(
+            "#classification-classification-code"
+          )?.textContent;
+          return {
+            header: header,
+            id: id,
+            originalDate: originalDate,
+            upDatedDate: upDatedDate,
+            updatedDatePublish: updatedPublish,
+            upDatedDateOffer: upDatedDateOffer,
+            originalDateOffer: originalDateOffer,
+            subCommand: subCommand,
+            contractOpportunity: contractOpportunity,
+            department: department,
+            productCode: productCode,
+            NAICSCode: NAICSCode,
+            subTire: subTire,
+            description: description,
+          };
+        });
+        arr.push(main)
+        console.log("Array Of object",arr)
+      } catch (error) {
+        console.log("ERROR", error);
+      }
     }
   } catch (error) {
     console.error(error);
